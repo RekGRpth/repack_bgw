@@ -172,7 +172,7 @@ repack_bgw_main(Datum main_arg)
     BackgroundWorkerUnblockSignals();
 
     /* Connect to our database */
-    BackgroundWorkerInitializeConnection((char *)table->database, NULL);
+    BackgroundWorkerInitializeConnection((char *)table->database, NULL, 0);
 
     elog(LOG, "%s initialized with %s.%s.%s",
          MyBgworkerEntry->bgw_name,
@@ -221,7 +221,7 @@ repack_bgw_main(Datum main_arg)
          */
         rc = WaitLatch(MyLatch,
                        WL_LATCH_SET | WL_TIMEOUT | WL_POSTMASTER_DEATH,
-                       repack_bgw_naptime * 1000L);
+                       repack_bgw_naptime * 1000L, PG_WAIT_EXTENSION);
         ResetLatch(MyLatch);
 
         /* emergency bailout if postmaster has died */
@@ -340,7 +340,6 @@ _PG_init(void)
         BGWORKER_BACKEND_DATABASE_CONNECTION;
     worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
     worker.bgw_restart_time = BGW_NEVER_RESTART;
-    worker.bgw_main = NULL;
     sprintf(worker.bgw_library_name, "repack_bgw");
     sprintf(worker.bgw_function_name, "repack_bgw_main");
     sprintf(worker.bgw_extra, "postgres");
@@ -376,7 +375,6 @@ repack_bgw_launch(PG_FUNCTION_ARGS)
         BGWORKER_BACKEND_DATABASE_CONNECTION;
     worker.bgw_start_time = BgWorkerStart_RecoveryFinished;
     worker.bgw_restart_time = BGW_NEVER_RESTART;
-    worker.bgw_main = NULL;
     sprintf(worker.bgw_library_name, "repack_bgw");
     sprintf(worker.bgw_function_name, "repack_bgw_main");
     snprintf(worker.bgw_name, BGW_MAXLEN, "repack worker %d", i);
